@@ -1,6 +1,6 @@
 import sampleQueue from "../queues/sampleQueue";
 
-export default async function (
+export async function addSampleProducer(
   jobName: string,
   jobdata: Record<string, unknown>
 ) {
