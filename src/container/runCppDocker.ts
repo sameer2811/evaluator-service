@@ -33,16 +33,15 @@ async function runCppDocker(code: string, testCase: string) {
       outputBuffer.push(chunk);
     });
 
-    await new Promise(function (resolve) {
+    const response = await new Promise(function (resolve) {
       loggerStream.on("end", function () {
         const completeStreamBufferOutput = Buffer.concat(outputBuffer);
         const readableOutput = decodeBufferStream(completeStreamBufferOutput);
-        console.log(readableOutput);
-        console.log("Coming here for the sucess call");
-        resolve("Success");
+        resolve(readableOutput);
       });
     });
     await cppDockerContainer.remove();
+    return response;
   } catch (error) {
     console.log(error);
   }

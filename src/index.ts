@@ -2,12 +2,13 @@ import express from "express";
 import bodyParser from "body-parser";
 import serverConfig from "./config/serverConfig";
 import apiRouter from "./routes";
-import runCppDocker from "./container/runCppDocker";
-// import runPythonDocker from "./container/runPythonDocker";
-// import runJavaDocker from "./container/runJavaDocker";
-
-// import { addSampleProducer } from "./producers/sampleProducer";
-// import { sampleQueueWorker } from "./workers/sampleWorker";
+import addsubmissionProducer from "./producers/submissionProducer";
+import {
+  CPP_LANGUAGE,
+  SUBMISSION_JOB,
+  SUBMISSION_QUEUE,
+} from "./util/constants";
+import initalizeSubmissionWorker from "./workers/subimissionWorker";
 const server = express();
 
 server.use(bodyParser.text());
@@ -52,18 +53,16 @@ server.listen(serverConfig.PORT, function () {
 
   `;
 
-  let testCase = `100
+  let testCase = `5
   200`;
-  // runPythonDocker(pythonCode, testCase);
-  // runJavaDocker(javaCode, testCase);
-  runCppDocker(cppCode, testCase);
-  // Registering Sample Queue
-  // sampleQueueWorker("SampleQueue");
 
-  // Addition in sample Producer
-  // addSampleProducer("sampleJob", {
-  //   name: "Sameer singh",
-  //   age: "23",
-  //   company: "PlaySimple Games",
-  // });
+  // Adding the jobDetails in the submission Producer
+  addsubmissionProducer(SUBMISSION_JOB, {
+    language: CPP_LANGUAGE,
+    code: cppCode,
+    testCase: testCase,
+  });
+
+  // Initializing the submission worker
+  initalizeSubmissionWorker(SUBMISSION_QUEUE);
 });
