@@ -1,4 +1,3 @@
-import { LogExit } from "concurrently";
 import { PYTHON_IMAGE_NAME } from "../util/constants";
 import createContainer from "./containerFactory";
 import decodeBufferStream from "./dockerHelper";
