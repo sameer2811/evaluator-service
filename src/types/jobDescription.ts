@@ -1,6 +1,6 @@
 export default interface IoJob {
   name: String;
-  payLoad: Record<string, string>;
+  payLoad: Record<string, unknown>;
   handler: () => void;
   failure: () => void;
 }
