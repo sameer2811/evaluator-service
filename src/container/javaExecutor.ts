@@ -1,8 +1,13 @@
+import {
+  CodeExecutorStrategy,
+  ExecutionResponse,
+} from "../types/codeExecutorStrategy";
 import { JAVA_IMAGE_NAME } from "../util/constants";
 import createContainer from "./containerFactory";
 import decodeBufferStream from "./dockerHelper";
-async function runJavaDocker(code: string, testCase: string) {
-  try {
+
+class JavaExecutor implements CodeExecutorStrategy {
+  async execute(code: string, testCase: string): Promise<ExecutionResponse> {
     let outputBuffer: Buffer[] = [];
     // const javaDockerContainer = await createContainer(java_IMAGE_NAME, [ "java3", "-c", code, "ssty -echo"]);
     code = code.replace(/'/g, '"');
@@ -31,19 +36,36 @@ async function runJavaDocker(code: string, testCase: string) {
       outputBuffer.push(chunk);
     });
 
-    await new Promise(function (resolve) {
+    try {
+      const response: string = await this.fetchDecodedStream(
+        loggerStream,
+        outputBuffer
+      );
+      return { output: response, status: "COMPLETED" };
+    } catch (error) {
+      return { output: error as string, status: "ERROR" };
+    } finally {
+      await javaDockerContainer.remove();
+    }
+  }
+
+  async fetchDecodedStream(
+    loggerStream: NodeJS.ReadableStream,
+    outputBuffer: Buffer[]
+  ): Promise<string> {
+    return new Promise(function (resolve, reject) {
       loggerStream.on("end", function () {
         const completeStreamBufferOutput = Buffer.concat(outputBuffer);
         const readableOutput = decodeBufferStream(completeStreamBufferOutput);
         console.log(readableOutput);
-        console.log("Coming here for the sucess call");
-        resolve("Success");
+        if (readableOutput.stdOut != "") {
+          resolve(readableOutput.stdOut);
+        } else {
+          reject(readableOutput.stderr);
+        }
       });
     });
-    await javaDockerContainer.remove();
-  } catch (error) {
-    console.log(error);
   }
 }
 
-export default runJavaDocker;
+export default JavaExecutor;

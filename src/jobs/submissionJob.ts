@@ -1,8 +1,11 @@
 import { Job } from "bullmq";
 import IoJob from "../types/jobDescription";
-import { CPP_LANGUAGE } from "../util/constants";
-import runCppDocker from "../container/runCppDocker";
 import { SubmissionPayload } from "../types/submissionPayload";
+import createExecutor from "../util/createExecutor";
+import {
+  CodeExecutorStrategy,
+  ExecutionResponse,
+} from "../types/codeExecutorStrategy";
 
 export default class SubmissionJob implements IoJob {
   name: string;
@@ -15,12 +18,23 @@ export default class SubmissionJob implements IoJob {
   handler = async () => {
     console.log(this.payLoad);
     let key = Object.keys(this.payLoad)[0];
-    if (this.payLoad[key].language === CPP_LANGUAGE) {
-      const response = await runCppDocker(
-        this.payLoad[key].code,
-        this.payLoad[key].testCase
+    let language = this.payLoad[key].language;
+    let inputTestCase = this.payLoad[key].testCase;
+    let code = this.payLoad[key].code;
+
+    const strategey: CodeExecutorStrategy | null = createExecutor(language);
+    if (strategey != null) {
+      const response: ExecutionResponse = await strategey.execute(
+        code,
+        inputTestCase
       );
-      console.log("Evaluated response is ", response);
+      if (response.status === "COMPLETED") {
+        console.log("code is executed Successfully");
+        console.log(response.output);
+      } else {
+        console.log("Something went wrong with the code execution");
+        console.log(response.output);
+      }
     }
   };
 

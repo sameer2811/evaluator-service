@@ -1,8 +1,13 @@
+import {
+  CodeExecutorStrategy,
+  ExecutionResponse,
+} from "../types/codeExecutorStrategy";
 import { CPP_IMAGE_NAME } from "../util/constants";
 import createContainer from "./containerFactory";
 import decodeBufferStream from "./dockerHelper";
-async function runCppDocker(code: string, testCase: string) {
-  try {
+
+class CppExecutor implements CodeExecutorStrategy {
+  async execute(code: string, testCase: string): Promise<ExecutionResponse> {
     let outputBuffer: Buffer[] = [];
     // const cppDockerContainer = await createContainer(cpp_IMAGE_NAME, [ "cpp3", "-c", code, "ssty -echo"]);
     code = code.replace(/'/g, '"');
@@ -15,7 +20,7 @@ async function runCppDocker(code: string, testCase: string) {
       runCommand,
     ]);
 
-    // echo ${code} > test.py && echo testCase | cpp3 test.py
+    // echo ${code} > test.py && echo testCase | python3 test.py
 
     // Booting up the container
     await cppDockerContainer.start();
@@ -33,18 +38,36 @@ async function runCppDocker(code: string, testCase: string) {
       outputBuffer.push(chunk);
     });
 
-    const response = await new Promise(function (resolve) {
+    try {
+      const response: string = await this.fetchDecodedStream(
+        loggerStream,
+        outputBuffer
+      );
+      return { output: response, status: "COMPLETED" };
+    } catch (error) {
+      return { output: error as string, status: "ERROR" };
+    } finally {
+      await cppDockerContainer.remove();
+    }
+  }
+
+  async fetchDecodedStream(
+    loggerStream: NodeJS.ReadableStream,
+    outputBuffer: Buffer[]
+  ): Promise<string> {
+    return new Promise(function (resolve, reject) {
       loggerStream.on("end", function () {
         const completeStreamBufferOutput = Buffer.concat(outputBuffer);
         const readableOutput = decodeBufferStream(completeStreamBufferOutput);
-        resolve(readableOutput);
+        console.log(readableOutput);
+        if (readableOutput.stdOut != "") {
+          resolve(readableOutput.stdOut);
+        } else {
+          reject(readableOutput.stderr);
+        }
       });
     });
-    await cppDockerContainer.remove();
-    return response;
-  } catch (error) {
-    console.log(error);
   }
 }
 
-export default runCppDocker;
+export default CppExecutor;

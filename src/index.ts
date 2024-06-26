@@ -57,11 +57,11 @@ server.listen(serverConfig.PORT, function () {
   200`;
 
   // Adding the jobDetails in the submission Producer
-  addsubmissionProducer(SUBMISSION_JOB, {
+  addsubmissionProducer(SUBMISSION_JOB, {"1" :{
     language: CPP_LANGUAGE,
     code: cppCode,
     testCase: testCase,
-  });
+  }});
 
   // Initializing the submission worker
   initalizeSubmissionWorker(SUBMISSION_QUEUE);
