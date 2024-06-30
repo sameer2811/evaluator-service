@@ -8,7 +8,7 @@ import {
   SUBMISSION_JOB,
   SUBMISSION_QUEUE,
 } from "./util/constants";
-import initalizeSubmissionWorker from "./workers/subimissionWorker";
+import initalizeSubmissionWorker from "./workers/submissionWorker";
 const server = express();
 
 server.use(bodyParser.text());
