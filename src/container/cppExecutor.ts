@@ -7,7 +7,8 @@ import createContainer from "./containerFactory";
 import decodeBufferStream from "./dockerHelper";
 
 class CppExecutor implements CodeExecutorStrategy {
-  async execute(code: string, testCase: string): Promise<ExecutionResponse> {
+  async execute(code: string, testCase: string , output : string): Promise<ExecutionResponse> {
+    console.log(output);
     let outputBuffer: Buffer[] = [];
     // const cppDockerContainer = await createContainer(cpp_IMAGE_NAME, [ "cpp3", "-c", code, "ssty -echo"]);
     code = code.replace(/'/g, '"');

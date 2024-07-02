@@ -7,7 +7,8 @@ import createContainer from "./containerFactory";
 import decodeBufferStream from "./dockerHelper";
 
 class PythonExecutor implements CodeExecutorStrategy {
-  async execute(code: string, testCase: string): Promise<ExecutionResponse> {
+  async execute(code: string, testCase: string , output : string): Promise<ExecutionResponse> {
+    console.log(output);
     let outputBuffer: Buffer[] = [];
     // const pythonDockerContainer = await createContainer(PYTHON_IMAGE_NAME, [ "python3", "-c", code, "ssty -echo"]);
     code = code.replace(/'/g, '"');

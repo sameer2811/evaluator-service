@@ -7,7 +7,12 @@ import createContainer from "./containerFactory";
 import decodeBufferStream from "./dockerHelper";
 
 class JavaExecutor implements CodeExecutorStrategy {
-  async execute(code: string, testCase: string): Promise<ExecutionResponse> {
+  async execute(
+    code: string,
+    testCase: string,
+    output: string
+  ): Promise<ExecutionResponse> {
+    console.log(output);
     let outputBuffer: Buffer[] = [];
     // const javaDockerContainer = await createContainer(java_IMAGE_NAME, [ "java3", "-c", code, "ssty -echo"]);
     code = code.replace(/'/g, '"');

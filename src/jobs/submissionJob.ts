@@ -20,13 +20,15 @@ export default class SubmissionJob implements IoJob {
     let key = Object.keys(this.payLoad)[0];
     let language = this.payLoad[key].language;
     let inputTestCase = this.payLoad[key].testCase;
+    let outputTestCase = this.payLoad[key].outputCase;
     let code = this.payLoad[key].code;
 
     const strategey: CodeExecutorStrategy | null = createExecutor(language);
     if (strategey != null) {
       const response: ExecutionResponse = await strategey.execute(
         code,
-        inputTestCase
+        inputTestCase,
+        outputTestCase
       );
       if (response.status === "COMPLETED") {
         console.log("code is executed Successfully");

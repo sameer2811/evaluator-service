@@ -1,5 +1,5 @@
 export interface CodeExecutorStrategy {
-  execute(code: string, testCase: string): Promise<ExecutionResponse>;
+  execute(code: string, testCase: string , output : string): Promise<ExecutionResponse>;
 }
 
 export type ExecutionResponse = {
