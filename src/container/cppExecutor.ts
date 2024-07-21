@@ -2,12 +2,21 @@ import {
   CodeExecutorStrategy,
   ExecutionResponse,
 } from "../types/codeExecutorStrategy";
-import { CPP_IMAGE_NAME } from "../util/constants";
+import {
+  CPP_IMAGE_NAME,
+  ERROR,
+  SUCCESS,
+  TIME_LIMIT_EXCEEDED,
+} from "../util/constants";
 import createContainer from "./containerFactory";
-import decodeBufferStream from "./dockerHelper";
+import { fetchDecodedStream } from "./dockerHelper";
 
 class CppExecutor implements CodeExecutorStrategy {
-  async execute(code: string, testCase: string , output : string): Promise<ExecutionResponse> {
+  async execute(
+    code: string,
+    testCase: string,
+    output: string
+  ): Promise<ExecutionResponse> {
     console.log(output);
     let outputBuffer: Buffer[] = [];
     // const cppDockerContainer = await createContainer(cpp_IMAGE_NAME, [ "cpp3", "-c", code, "ssty -echo"]);
@@ -40,34 +49,19 @@ class CppExecutor implements CodeExecutorStrategy {
     });
 
     try {
-      const response: string = await this.fetchDecodedStream(
+      const response: string = await fetchDecodedStream(
         loggerStream,
         outputBuffer
       );
-      return { output: response, status: "COMPLETED" };
+      return { output: response, status: SUCCESS };
     } catch (error) {
-      return { output: error as string, status: "ERROR" };
+      if (error === TIME_LIMIT_EXCEEDED) {
+        return { output: error as string, status: TIME_LIMIT_EXCEEDED };
+      }
+      return { output: error as string, status: ERROR };
     } finally {
       await cppDockerContainer.remove();
     }
-  }
-
-  async fetchDecodedStream(
-    loggerStream: NodeJS.ReadableStream,
-    outputBuffer: Buffer[]
-  ): Promise<string> {
-    return new Promise(function (resolve, reject) {
-      loggerStream.on("end", function () {
-        const completeStreamBufferOutput = Buffer.concat(outputBuffer);
-        const readableOutput = decodeBufferStream(completeStreamBufferOutput);
-        console.log(readableOutput);
-        if (readableOutput.stdOut != "") {
-          resolve(readableOutput.stdOut);
-        } else {
-          reject(readableOutput.stderr);
-        }
-      });
-    });
   }
 }
 

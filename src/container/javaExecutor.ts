@@ -2,9 +2,14 @@ import {
   CodeExecutorStrategy,
   ExecutionResponse,
 } from "../types/codeExecutorStrategy";
-import { JAVA_IMAGE_NAME } from "../util/constants";
+import {
+  ERROR,
+  JAVA_IMAGE_NAME,
+  SUCCESS,
+  TIME_LIMIT_EXCEEDED,
+} from "../util/constants";
 import createContainer from "./containerFactory";
-import decodeBufferStream from "./dockerHelper";
+import { fetchDecodedStream } from "./dockerHelper";
 
 class JavaExecutor implements CodeExecutorStrategy {
   async execute(
@@ -42,34 +47,24 @@ class JavaExecutor implements CodeExecutorStrategy {
     });
 
     try {
-      const response: string = await this.fetchDecodedStream(
+      const response: string = await fetchDecodedStream(
         loggerStream,
         outputBuffer
       );
-      return { output: response, status: "COMPLETED" };
+      if (response.trim() === output.trim()) {
+        return { output: response, status: SUCCESS };
+      } else {
+        return { output: response, status: "WA" };
+      }
     } catch (error) {
-      return { output: error as string, status: "ERROR" };
+      if (error === TIME_LIMIT_EXCEEDED) {
+        return { output: error as string, status: TIME_LIMIT_EXCEEDED };
+      }
+      return { output: error as string, status: ERROR };
     } finally {
+      await javaDockerContainer.kill();
       await javaDockerContainer.remove();
     }
-  }
-
-  async fetchDecodedStream(
-    loggerStream: NodeJS.ReadableStream,
-    outputBuffer: Buffer[]
-  ): Promise<string> {
-    return new Promise(function (resolve, reject) {
-      loggerStream.on("end", function () {
-        const completeStreamBufferOutput = Buffer.concat(outputBuffer);
-        const readableOutput = decodeBufferStream(completeStreamBufferOutput);
-        console.log(readableOutput);
-        if (readableOutput.stdOut != "") {
-          resolve(readableOutput.stdOut);
-        } else {
-          reject(readableOutput.stderr);
-        }
-      });
-    });
   }
 }
 

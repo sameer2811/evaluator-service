@@ -2,12 +2,21 @@ import {
   CodeExecutorStrategy,
   ExecutionResponse,
 } from "../types/codeExecutorStrategy";
-import { PYTHON_IMAGE_NAME } from "../util/constants";
+import {
+  ERROR,
+  PYTHON_IMAGE_NAME,
+  SUCCESS,
+  TIME_LIMIT_EXCEEDED,
+} from "../util/constants";
 import createContainer from "./containerFactory";
-import decodeBufferStream from "./dockerHelper";
+import { fetchDecodedStream } from "./dockerHelper";
 
 class PythonExecutor implements CodeExecutorStrategy {
-  async execute(code: string, testCase: string , output : string): Promise<ExecutionResponse> {
+  async execute(
+    code: string,
+    testCase: string,
+    output: string
+  ): Promise<ExecutionResponse> {
     console.log(output);
     let outputBuffer: Buffer[] = [];
     // const pythonDockerContainer = await createContainer(PYTHON_IMAGE_NAME, [ "python3", "-c", code, "ssty -echo"]);
@@ -40,34 +49,19 @@ class PythonExecutor implements CodeExecutorStrategy {
     });
 
     try {
-      const response: string = await this.fetchDecodedStream(
+      const response: string = await fetchDecodedStream(
         loggerStream,
         outputBuffer
       );
-      return { output: response, status: "COMPLETED" };
+      return { output: response, status: SUCCESS };
     } catch (error) {
-      return { output: error as string, status: "ERROR" };
+      if (error === TIME_LIMIT_EXCEEDED) {
+        return { output: error as string, status: TIME_LIMIT_EXCEEDED };
+      }
+      return { output: error as string, status: ERROR };
     } finally {
       await pythonDockerContainer.remove();
     }
-  }
-
-  async fetchDecodedStream(
-    loggerStream: NodeJS.ReadableStream,
-    outputBuffer: Buffer[]
-  ): Promise<string> {
-    return new Promise(function (resolve, reject) {
-      loggerStream.on("end", function () {
-        const completeStreamBufferOutput = Buffer.concat(outputBuffer);
-        const readableOutput = decodeBufferStream(completeStreamBufferOutput);
-        console.log(readableOutput);
-        if (readableOutput.stdOut != "") {
-          resolve(readableOutput.stdOut);
-        } else {
-          reject(readableOutput.stderr);
-        }
-      });
-    });
   }
 }
 

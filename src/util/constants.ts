@@ -5,7 +5,13 @@ export const BYTE_HEADER_SIZE = 8;
 
 export const SUBMISSION_QUEUE = "submission_queue";
 export const SUBMISSION_JOB = "submission_job";
+export const EVALUATION_QUEUE = "evaluation_queue";
+export const EVALUATION_JOB = "evaluation_job";
 
 export const CPP_LANGUAGE = "cpp";
 export const JAVA_LANGUAGE = "java";
 export const PYTHON_LANGUAGE = "python";
+
+export const TIME_LIMIT_EXCEEDED = "time_limit_exceeded";
+export const SUCCESS = "success";
+export const ERROR = "error";

@@ -1,4 +1,3 @@
-import { Job } from "bullmq";
 import IoJob from "../types/jobDescription";
 import { SubmissionPayload } from "../types/submissionPayload";
 import createExecutor from "../util/createExecutor";
@@ -7,6 +6,8 @@ import {
   ExecutionResponse,
 } from "../types/codeExecutorStrategy";
 
+import { EVALUATION_JOB } from "../util/constants";
+import addEvaluationProducer from "../producers/evaluationProducer";
 export default class SubmissionJob implements IoJob {
   name: string;
   payLoad: Record<string, SubmissionPayload>;
@@ -22,25 +23,22 @@ export default class SubmissionJob implements IoJob {
     let inputTestCase = this.payLoad[key].testCase;
     let outputTestCase = this.payLoad[key].outputCase;
     let code = this.payLoad[key].code;
+    let userId = this.payLoad[key].userId;
+    let submissionId = this.payLoad[key].submissionId;
 
-    const strategey: CodeExecutorStrategy | null = createExecutor(language);
-    if (strategey != null) {
-      const response: ExecutionResponse = await strategey.execute(
+    const strategy: CodeExecutorStrategy | null = createExecutor(language);
+    if (strategy != null) {
+      const response: ExecutionResponse = await strategy.execute(
         code,
         inputTestCase,
         outputTestCase
       );
-      if (response.status === "COMPLETED") {
-        console.log("code is executed Successfully");
-        console.log(response.output);
-      } else {
-        console.log("Something went wrong with the code execution");
-        console.log(response.output);
-      }
+      addEvaluationProducer(EVALUATION_JOB, {
+        response: response,
+        userId: userId,
+        submissionId: submissionId,
+      });
+      console.log(response);
     }
-  };
-
-  failure = function failure(job?: Job) {
-    console.log("Failed the Job ", job);
   };
 }
