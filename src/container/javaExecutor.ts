@@ -58,11 +58,11 @@ class JavaExecutor implements CodeExecutorStrategy {
       }
     } catch (error) {
       if (error === TIME_LIMIT_EXCEEDED) {
+        await javaDockerContainer.kill();
         return { output: error as string, status: TIME_LIMIT_EXCEEDED };
       }
       return { output: error as string, status: ERROR };
     } finally {
-      await javaDockerContainer.kill();
       await javaDockerContainer.remove();
     }
   }

@@ -56,6 +56,7 @@ class PythonExecutor implements CodeExecutorStrategy {
       return { output: response, status: SUCCESS };
     } catch (error) {
       if (error === TIME_LIMIT_EXCEEDED) {
+        await pythonDockerContainer.kill();
         return { output: error as string, status: TIME_LIMIT_EXCEEDED };
       }
       return { output: error as string, status: ERROR };
