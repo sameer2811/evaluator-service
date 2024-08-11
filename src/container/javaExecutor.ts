@@ -57,6 +57,7 @@ class JavaExecutor implements CodeExecutorStrategy {
         return { output: response, status: "WA" };
       }
     } catch (error) {
+      console.log("Coming here ");
       if (error === TIME_LIMIT_EXCEEDED) {
         await javaDockerContainer.kill();
         return { output: error as string, status: TIME_LIMIT_EXCEEDED };

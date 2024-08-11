@@ -26,19 +26,23 @@ export default class SubmissionJob implements IoJob {
     let userId = this.payLoad[key].userId;
     let submissionId = this.payLoad[key].submissionId;
 
-    const strategy: CodeExecutorStrategy | null = createExecutor(language);
-    if (strategy != null) {
-      const response: ExecutionResponse = await strategy.execute(
-        code,
-        inputTestCase,
-        outputTestCase
-      );
-      addEvaluationProducer(EVALUATION_JOB, {
-        response: response,
-        userId: userId,
-        submissionId: submissionId,
-      });
-      console.log(response);
+    try {
+      const strategy: CodeExecutorStrategy | null = createExecutor(language);
+      if (strategy != null) {
+        const response: ExecutionResponse = await strategy.execute(
+          code,
+          inputTestCase,
+          outputTestCase
+        );
+        addEvaluationProducer(EVALUATION_JOB, {
+          response: response,
+          userId: userId,
+          submissionId: submissionId,
+        });
+        console.log(response);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 }
